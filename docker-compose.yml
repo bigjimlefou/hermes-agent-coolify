@@ -30,7 +30,7 @@ services:
         RUN git clone --recurse-submodules --depth 1 --branch $${HERMES_REF} \
             https://github.com/NousResearch/hermes-agent.git .
         # Patch status.py: wrap systemctl call in try/except for containers
-        RUN echo 'aW1wb3J0IHBhdGhsaWIKcCA9IHBhdGhsaWIuUGF0aCgiaGVybWVzX2NsaS9zdGF0dXMucHkiKQppZiBub3QgcC5leGlzdHMoKToKICAgIHByaW50KCJTS0lQOiBub3QgZm91bmQiKTsgZXhpdCgwKQpzcmMgPSBwLnJlYWRfdGV4dCgpCm9sZCA9ICIiIiAgICBpZiBzeXMucGxhdGZvcm0uc3RhcnRzd2l0aCgnbGludXgnKToKICAgICAgICByZXN1bHQgPSBzdWJwcm9jZXNzLnJ1bigKICAgICAgICAgICAgWyJzeXN0ZW1jdGwiLCAiLS11c2VyIiwgImlzLWFjdGl2ZSIsICJoZXJtZXMtZ2F0ZXdheSJdLAogICAgICAgICAgICBjYXB0dXJlX291dHB1dD1UcnVlLAogICAgICAgICAgICB0ZXh0PVRydWUKICAgICAgICApCiAgICAgICAgaXNfYWN0aXZlID0gcmVzdWx0LnN0ZG91dC5zdHJpcCgpID09ICJhY3RpdmUiCiAgICAgICAgcHJpbnQoZiIgIFN0YXR1czogICAgICAge2NoZWNrX21hcmsoaXNfYWN0aXZlKX0geydydW5uaW5nJyBpZiBpc19hY3RpdmUgZWxzZSAnc3RvcHBlZCd9IikKICAgICAgICBwcmludChmIiAgTWFuYWdlcjogICAgICBzeXN0ZW1kICh1c2VyKSIpIiIiCm5ldyA9ICIiIiAgICBpZiBzeXMucGxhdGZvcm0uc3RhcnRzd2l0aCgnbGludXgnKToKICAgICAgICB0cnk6CiAgICAgICAgICAgIHJlc3VsdCA9IHN1YnByb2Nlc3MucnVuKAogICAgICAgICAgICAgICAgWyJzeXN0ZW1jdGwiLCAiLS11c2VyIiwgImlzLWFjdGl2ZSIsICJoZXJtZXMtZ2F0ZXdheSJdLAogICAgICAgICAgICAgICAgY2FwdHVyZV9vdXRwdXQ9VHJ1ZSwKICAgICAgICAgICAgICAgIHRleHQ9VHJ1ZQogICAgICAgICAgICApCiAgICAgICAgICAgIGlzX2FjdGl2ZSA9IHJlc3VsdC5zdGRvdXQuc3RyaXAoKSA9PSAiYWN0aXZlIgogICAgICAgICAgICBwcmludChmIiAgU3RhdHVzOiAgICAgICB7Y2hlY2tfbWFyayhpc19hY3RpdmUpfSB7J3J1bm5pbmcnIGlmIGlzX2FjdGl2ZSBlbHNlICdzdG9wcGVkJ30iKQogICAgICAgICAgICBwcmludChmIiAgTWFuYWdlcjogICAgICBzeXN0ZW1kICh1c2VyKSIpCiAgICAgICAgZXhjZXB0IEZpbGVOb3RGb3VuZEVycm9yOgogICAgICAgICAgICBwcmludCgiICBTdGF0dXM6ICAgICAgICh1bmtub3duIC0gc3lzdGVtY3RsIG5vdCBhdmFpbGFibGUpIikKICAgICAgICAgICAgcHJpbnQoIiAgTWFuYWdlcjogICAgICAobm8gaW5pdCBzeXN0ZW0pIikiIiIKaWYgb2xkIG5vdCBpbiBzcmM6CiAgICBwcmludCgiU0tJUDogYWxyZWFkeSBwYXRjaGVkIG9yIGNoYW5nZWQgdXBzdHJlYW0iKTsgZXhpdCgwKQpwLndyaXRlX3RleHQoc3JjLnJlcGxhY2Uob2xkLCBuZXcpKQpwcmludCgiUEFUQ0hFRDogaGVybWVzX2NsaS9zdGF0dXMucHkiKQo=' | base64 -d | python3
+        RUN echo 'aW1wb3J0IHBhdGhsaWIKcCA9IHBhdGhsaWIuUGF0aCgiaGVybWVzX2NsaS9zdGF0dXMucHkiKQppZiBub3QgcC5leGlzdHMoKToKICAgIHByaW50KCJTS0lQOiBub3QgZm91bmQiKTsgZXhpdCgwKQpzcmMgPSBwLnJlYWRfdGV4dCgpCm[... ]'
         # Patch gateway/platforms/base.py: fix typing indicator crash (add **kwargs)
         RUN sed -i 's/async def _keep_typing(self, chat_id: str, interval: float = 2.0) -> None:/async def _keep_typing(self, chat_id: str, interval: float = 2.0, **kwargs) -> None:/' gateway/platforms/base.py && \
             sed -i 's/await self.send_typing(chat_id)/await self.send_typing(chat_id, **kwargs)/' gateway/platforms/base.py && \
@@ -41,7 +41,9 @@ services:
         ENV PATH="/app/.venv/bin:$PATH"
         RUN /root/.local/bin/uv pip install -e ".[all]" || /root/.local/bin/uv pip install -e "."
         # Install Python Playwright and browsers into the venv (used by the agent)
-        RUN /app/.venv/bin/pip install playwright && /app/.venv/bin/playwright install --with-deps chromium firefox webkit
+        RUN /app/.venv/bin/python -m pip install --upgrade pip setuptools wheel && \
+            /app/.venv/bin/python -m pip install playwright && \
+            /app/.venv/bin/python -m playwright install --with-deps chromium firefox webkit
         RUN if [ -f "mini-swe-agent/pyproject.toml" ]; then /root/.local/bin/uv pip install -e "./mini-swe-agent"; fi && \
             if [ -f "tinker-atropos/pyproject.toml" ]; then /root/.local/bin/uv pip install -e "./tinker-atropos"; fi
         RUN mkdir -p /root/workspace && \
@@ -151,42 +153,6 @@ services:
       - TERMINAL_SSH_USER=${TERMINAL_SSH_USER:-}
       - TERMINAL_SSH_PORT=${TERMINAL_SSH_PORT:-22}
       - TERMINAL_SSH_KEY=${TERMINAL_SSH_KEY:-}
-
-      # =================================================================
-      # AGENT SETTINGS
-      # =================================================================
-      - HERMES_MAX_ITERATIONS=${HERMES_MAX_ITERATIONS:-90}
-      - HERMES_INFERENCE_PROVIDER=${HERMES_INFERENCE_PROVIDER:-}
-      - CONTEXT_COMPRESSION_ENABLED=${CONTEXT_COMPRESSION_ENABLED:-true}
-      - CONTEXT_COMPRESSION_THRESHOLD=${CONTEXT_COMPRESSION_THRESHOLD:-0.85}
-      - HERMES_HUMAN_DELAY_MODE=${HERMES_HUMAN_DELAY_MODE:-off}
-      - HERMES_HUMAN_DELAY_MIN_MS=${HERMES_HUMAN_DELAY_MIN_MS:-800}
-      - HERMES_HUMAN_DELAY_MAX_MS=${HERMES_HUMAN_DELAY_MAX_MS:-2500}
-
-      # =================================================================
-      # AUXILIARY MODEL OVERRIDES (optional)
-      # =================================================================
-      - AUXILIARY_VISION_PROVIDER=${AUXILIARY_VISION_PROVIDER:-}
-      - AUXILIARY_VISION_MODEL=${AUXILIARY_VISION_MODEL:-}
-      - AUXILIARY_WEB_EXTRACT_PROVIDER=${AUXILIARY_WEB_EXTRACT_PROVIDER:-}
-      - AUXILIARY_WEB_EXTRACT_MODEL=${AUXILIARY_WEB_EXTRACT_MODEL:-}
-      - CONTEXT_COMPRESSION_PROVIDER=${CONTEXT_COMPRESSION_PROVIDER:-}
-      - CONTEXT_COMPRESSION_MODEL=${CONTEXT_COMPRESSION_MODEL:-}
-
-      # =================================================================
-      # OPTIONAL INTEGRATIONS
-      # =================================================================
-      - GITHUB_TOKEN=${GITHUB_TOKEN:-}
-      - TINKER_API_KEY=${TINKER_API_KEY:-}
-      - WANDB_API_KEY=${WANDB_API_KEY:-}
-
-      # =================================================================
-      # DEBUG
-      # =================================================================
-      - WEB_TOOLS_DEBUG=${WEB_TOOLS_DEBUG:-false}
-      - VISION_TOOLS_DEBUG=${VISION_TOOLS_DEBUG:-false}
-      - MOA_TOOLS_DEBUG=${MOA_TOOLS_DEBUG:-false}
-      - IMAGE_TOOLS_DEBUG=${IMAGE_TOOLS_DEBUG:-false}
 
     healthcheck:
       test: ["CMD", "python", "-c", "import hermes_cli; print('ok')"]
