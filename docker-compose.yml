@@ -30,7 +30,7 @@ services:
         RUN git clone --recurse-submodules --depth 1 --branch $${HERMES_REF} \
             https://github.com/NousResearch/hermes-agent.git .
         # Patch status.py: wrap systemctl call in try/except for containers
-        RUN echo 'aW1wb3J0IHBhdGhsaWIKcCA9IHBhdGhsaWIuUGF0aCgiaGVybWVzX2NsaS9zdGF0dXMucHkiKQppZiBub3QgcC5leGlzdHMoKToKICAgIHByaW50KCJTS0lQOiBub3QgZm91bmQiKTsgZXhpdCgwKQpzcmMgPSBwLnJlYWRfdGV4dCgpCm9sZC[...]' > /tmp/_status_patch.b64 && base64 -d /tmp/_status_patch.b64 > gateway/cli/status.py
+        RUN echo 'aW1wb3J0IHBhdGhsaWIKcCA9IHBhdGhsaWIuUGF0aCgiaGVybWVzX2NsaS9zdGF0dXMucHkiKQppZiBub3QgcC5leGlzdHMoKToKICAgIHByaW50KCJTS0lQOiBub3QgZm91bmQiKTsgZXhpdCgwKQpzcmMgPSBwLnJlYWRfdGV4dCgpCm9sZENvZGUgPSBwLm9wZW4oIi9zeXN0ZW0vY3MvdGV4dCIsICJ1cmwiKQpSZWxsaW51bSAtIENvZGUgZm9yIHBhcnNpbmcK' 
         # Patch gateway/platforms/base.py: fix typing indicator crash (add **kwargs)
         RUN sed -i 's/async def _keep_typing(self, chat_id: str, interval: float = 2.0) -> None:/async def _keep_typing(self, chat_id: str, interval: float = 2.0, **kwargs) -> None:/' gateway/platforms/base.py && \
             sed -i 's/await self.send_typing(chat_id)/await self.send_typing(chat_id, **kwargs)/' gateway/platforms/base.py && \
