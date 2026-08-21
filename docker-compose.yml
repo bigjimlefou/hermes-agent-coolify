@@ -13,8 +13,14 @@ services:
     build:
       dockerfile_inline: |
         FROM python:3.11-slim
+        # install common tools + Playwright system deps
         RUN apt-get update && apt-get install -y --no-install-recommends \
-            git curl build-essential ripgrep ffmpeg \
+            git curl build-essential ripgrep ffmpeg wget ca-certificates \
+            # Playwright / browser dependencies
+            libnss3 libnspr4 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 \
+            libxcomposite1 libxdamage1 libxrandr2 libgbm1 libasound2 \
+            libpangocairo-1.0-0 libxss1 libxshmfence1 libwayland-client0 \
+            libwayland-egl1 libxkbcommon0 fonts-liberation \
             && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
             && apt-get install -y --no-install-recommends nodejs \
             && rm -rf /var/lib/apt/lists/*
@@ -34,6 +40,10 @@ services:
         ENV VIRTUAL_ENV=/app/.venv
         ENV PATH="/app/.venv/bin:$PATH"
         RUN /root/.local/bin/uv pip install -e ".[all]" || /root/.local/bin/uv pip install -e "."
+        # Install Python Playwright and browsers into the venv (used by the agent)
+        RUN /app/.venv/bin/python -m pip install --upgrade pip setuptools wheel && \
+            /app/.venv/bin/python -m pip install playwright && \
+            /app/.venv/bin/python -m playwright install --with-deps chromium firefox webkit
         RUN if [ -f "mini-swe-agent/pyproject.toml" ]; then /root/.local/bin/uv pip install -e "./mini-swe-agent"; fi && \
             if [ -f "tinker-atropos/pyproject.toml" ]; then /root/.local/bin/uv pip install -e "./tinker-atropos"; fi
         RUN mkdir -p /root/workspace && \
