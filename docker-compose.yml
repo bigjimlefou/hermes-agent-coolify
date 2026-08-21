@@ -154,6 +154,42 @@ services:
       - TERMINAL_SSH_PORT=${TERMINAL_SSH_PORT:-22}
       - TERMINAL_SSH_KEY=${TERMINAL_SSH_KEY:-}
 
+      # =================================================================
+      # AGENT SETTINGS
+      # =================================================================
+      - HERMES_MAX_ITERATIONS=${HERMES_MAX_ITERATIONS:-90}
+      - HERMES_INFERENCE_PROVIDER=${HERMES_INFERENCE_PROVIDER:-}
+      - CONTEXT_COMPRESSION_ENABLED=${CONTEXT_COMPRESSION_ENABLED:-true}
+      - CONTEXT_COMPRESSION_THRESHOLD=${CONTEXT_COMPRESSION_THRESHOLD:-0.85}
+      - HERMES_HUMAN_DELAY_MODE=${HERMES_HUMAN_DELAY_MODE:-off}
+      - HERMES_HUMAN_DELAY_MIN_MS=${HERMES_HUMAN_DELAY_MIN_MS:-800}
+      - HERMES_HUMAN_DELAY_MAX_MS=${HERMES_HUMAN_DELAY_MAX_MS:-2500}
+
+      # =================================================================
+      # AUXILIARY MODEL OVERRIDES (optional)
+      # =================================================================
+      - AUXILIARY_VISION_PROVIDER=${AUXILIARY_VISION_PROVIDER:-}
+      - AUXILIARY_VISION_MODEL=${AUXILIARY_VISION_MODEL:-}
+      - AUXILIARY_WEB_EXTRACT_PROVIDER=${AUXILIARY_WEB_EXTRACT_PROVIDER:-}
+      - AUXILIARY_WEB_EXTRACT_MODEL=${AUXILIARY_WEB_EXTRACT_MODEL:-}
+      - CONTEXT_COMPRESSION_PROVIDER=${CONTEXT_COMPRESSION_PROVIDER:-}
+      - CONTEXT_COMPRESSION_MODEL=${CONTEXT_COMPRESSION_MODEL:-}
+
+      # =================================================================
+      # OPTIONAL INTEGRATIONS
+      # =================================================================
+      - GITHUB_TOKEN=${GITHUB_TOKEN:-}
+      - TINKER_API_KEY=${TINKER_API_KEY:-}
+      - WANDB_API_KEY=${WANDB_API_KEY:-}
+
+      # =================================================================
+      # DEBUG
+      # =================================================================
+      - WEB_TOOLS_DEBUG=${WEB_TOOLS_DEBUG:-false}
+      - VISION_TOOLS_DEBUG=${VISION_TOOLS_DEBUG:-false}
+      - MOA_TOOLS_DEBUG=${MOA_TOOLS_DEBUG:-false}
+      - IMAGE_TOOLS_DEBUG=${IMAGE_TOOLS_DEBUG:-false}
+
     healthcheck:
       test: ["CMD", "python", "-c", "import hermes_cli; print('ok')"]
       interval: 30s
