@@ -13,8 +13,14 @@ services:
     build:
       dockerfile_inline: |
         FROM python:3.11-slim
+        # install common tools + Playwright system deps
         RUN apt-get update && apt-get install -y --no-install-recommends \
-            git curl build-essential ripgrep ffmpeg \
+            git curl build-essential ripgrep ffmpeg wget ca-certificates \
+            # Playwright / browser dependencies
+            libnss3 libnspr4 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 \
+            libxcomposite1 libxdamage1 libxrandr2 libgbm1 libasound2 \
+            libpangocairo-1.0-0 libxss1 libxshmfence1 libwayland-client0 \
+            libwayland-egl1 libxkbcommon0 fonts-liberation \
             && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
             && apt-get install -y --no-install-recommends nodejs \
             && rm -rf /var/lib/apt/lists/*
@@ -24,7 +30,7 @@ services:
         RUN git clone --recurse-submodules --depth 1 --branch $${HERMES_REF} \
             https://github.com/NousResearch/hermes-agent.git .
         # Patch status.py: wrap systemctl call in try/except for containers
-        RUN echo 'aW1wb3J0IHBhdGhsaWIKcCA9IHBhdGhsaWIuUGF0aCgiaGVybWVzX2NsaS9zdGF0dXMucHkiKQppZiBub3QgcC5leGlzdHMoKToKICAgIHByaW50KCJTS0lQOiBub3QgZm91bmQiKTsgZXhpdCgwKQpzcmMgPSBwLnJlYWRfdGV4dCgpCm9sZCA9ICIiIiAgICBpZiBzeXMucGxhdGZvcm0uc3RhcnRzd2l0aCgnbGludXgnKToKICAgICAgICByZXN1bHQgPSBzdWJwcm9jZXNzLnJ1bigKICAgICAgICAgICAgWyJzeXN0ZW1jdGwiLCAiLS11c2VyIiwgImlzLWFjdGl2ZSIsICJoZXJtZXMtZ2F0ZXdheSJdLAogICAgICAgICAgICBjYXB0dXJlX291dHB1dD1UcnVlLAogICAgICAgICAgICB0ZXh0PVRydWUKICAgICAgICApCiAgICAgICAgaXNfYWN0aXZlID0gcmVzdWx0LnN0ZG91dC5zdHJpcCgpID09ICJhY3RpdmUiCiAgICAgICAgcHJpbnQoZiIgIFN0YXR1czogICAgICAge2NoZWNrX21hcmsoaXNfYWN0aXZlKX0geydydW5uaW5nJyBpZiBpc19hY3RpdmUgZWxzZSAnc3RvcHBlZCd9IikKICAgICAgICBwcmludChmIiAgTWFuYWdlcjogICAgICBzeXN0ZW1kICh1c2VyKSIpIiIiCm5ldyA9ICIiIiAgICBpZiBzeXMucGxhdGZvcm0uc3RhcnRzd2l0aCgnbGludXgnKToKICAgICAgICB0cnk6CiAgICAgICAgICAgIHJlc3VsdCA9IHN1YnByb2Nlc3MucnVuKAogICAgICAgICAgICAgICAgWyJzeXN0ZW1jdGwiLCAiLS11c2VyIiwgImlzLWFjdGl2ZSIsICJoZXJtZXMtZ2F0ZXdheSJdLAogICAgICAgICAgICAgICAgY2FwdHVyZV9vdXRwdXQ9VHJ1ZSwKICAgICAgICAgICAgICAgIHRleHQ9VHJ1ZQogICAgICAgICAgICApCiAgICAgICAgICAgIGlzX2FjdGl2ZSA9IHJlc3VsdC5zdGRvdXQuc3RyaXAoKSA9PSAiYWN0aXZlIgogICAgICAgICAgICBwcmludChmIiAgU3RhdHVzOiAgICAgICB7Y2hlY2tfbWFyayhpc19hY3RpdmUpfSB7J3J1bm5pbmcnIGlmIGlzX2FjdGl2ZSBlbHNlICdzdG9wcGVkJ30iKQogICAgICAgICAgICBwcmludChmIiAgTWFuYWdlcjogICAgICBzeXN0ZW1kICh1c2VyKSIpCiAgICAgICAgZXhjZXB0IEZpbGVOb3RGb3VuZEVycm9yOgogICAgICAgICAgICBwcmludCgiICBTdGF0dXM6ICAgICAgICh1bmtub3duIC0gc3lzdGVtY3RsIG5vdCBhdmFpbGFibGUpIikKICAgICAgICAgICAgcHJpbnQoIiAgTWFuYWdlcjogICAgICAobm8gaW5pdCBzeXN0ZW0pIikiIiIKaWYgb2xkIG5vdCBpbiBzcmM6CiAgICBwcmludCgiU0tJUDogYWxyZWFkeSBwYXRjaGVkIG9yIGNoYW5nZWQgdXBzdHJlYW0iKTsgZXhpdCgwKQpwLndyaXRlX3RleHQoc3JjLnJlcGxhY2Uob2xkLCBuZXcpKQpwcmludCgiUEFUQ0hFRDogaGVybWVzX2NsaS9zdGF0dXMucHkiKQo=' | base64 -d | python3
+        RUN echo 'aW1wb3J0IHBhdGhsaWIKcCA9IHBhdGhsaWIuUGF0aCgiaGVybWVzX2NsaS9zdGF0dXMucHkiKQppZiBub3QgcC5leGlzdHMoKToKICAgIHByaW50KCJTS0lQOiBub3QgZm91bmQiKTsgZXhpdCgwKQpzcmMgPSBwLnJlYWRfdGV4dCgpCm9sZC[...]' > /tmp/_status_patch.b64 && base64 -d /tmp/_status_patch.b64 > gateway/cli/status.py
         # Patch gateway/platforms/base.py: fix typing indicator crash (add **kwargs)
         RUN sed -i 's/async def _keep_typing(self, chat_id: str, interval: float = 2.0) -> None:/async def _keep_typing(self, chat_id: str, interval: float = 2.0, **kwargs) -> None:/' gateway/platforms/base.py && \
             sed -i 's/await self.send_typing(chat_id)/await self.send_typing(chat_id, **kwargs)/' gateway/platforms/base.py && \
@@ -34,6 +40,8 @@ services:
         ENV VIRTUAL_ENV=/app/.venv
         ENV PATH="/app/.venv/bin:$PATH"
         RUN /root/.local/bin/uv pip install -e ".[all]" || /root/.local/bin/uv pip install -e "."
+        # Install Python Playwright and browsers into the venv (used by the agent)
+        RUN /app/.venv/bin/pip install playwright && /app/.venv/bin/playwright install --with-deps chromium firefox webkit
         RUN if [ -f "mini-swe-agent/pyproject.toml" ]; then /root/.local/bin/uv pip install -e "./mini-swe-agent"; fi && \
             if [ -f "tinker-atropos/pyproject.toml" ]; then /root/.local/bin/uv pip install -e "./tinker-atropos"; fi
         RUN mkdir -p /root/workspace && \
