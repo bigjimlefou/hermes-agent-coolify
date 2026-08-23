@@ -16,6 +16,7 @@ services:
         # install common tools + Playwright system deps
         RUN apt-get update && apt-get install -y --no-install-recommends \
           git curl gnupg lsb-release build-essential ripgrep ffmpeg wget ca-certificates \
+          libssl-dev pkg-config \
             # Playwright / browser dependencies
             libnss3 libnspr4 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 \
             libxcomposite1 libxdamage1 libxrandr2 libgbm1 libasound2 \
@@ -36,6 +37,11 @@ services:
             sed -i 's/await self.send_typing(chat_id)/await self.send_typing(chat_id, **kwargs)/' gateway/platforms/base.py && \
             sed -i 's/async def send_typing(self, chat_id: str) -> None:/async def send_typing(self, chat_id: str, **kwargs) -> None:/' gateway/platforms/base.py
         RUN npm install --omit=dev
+        # Install Rust toolchain non-interactively and the Himalaya CLI (system-wide)
+        RUN curl https://sh.rustup.rs -sSf | sh -s -- -y && \
+          /root/.cargo/bin/cargo install himalaya || true
+        ENV CARGO_HOME=/root/.cargo
+        ENV PATH="/root/.cargo/bin:$PATH"
         RUN /root/.local/bin/uv venv .venv --python 3.11
         ENV VIRTUAL_ENV=/app/.venv
         ENV PATH="/app/.venv/bin:$PATH"
